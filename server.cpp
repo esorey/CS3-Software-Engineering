@@ -34,14 +34,12 @@ int parse_port(const char *config_string) {
     return std::stoi(config.statements_.at(0)->tokens_.at(1));
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "usage: ./server <server_config_file>"  << std::endl;
         return 1;
     }
-    try
-    {
+    try {
         boost::asio::io_service io_service;
         std::string config_file = std::string(argv[1]);
         int port = parse_port(argv[1]);
@@ -57,8 +55,7 @@ int main(int argc, char* argv[])
             boost::asio::write(socket, boost::asio::buffer(serve_page()));
         }
     }
-    catch (std::exception& e)
-    {
+    catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
     }
 
