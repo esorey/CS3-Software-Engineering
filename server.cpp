@@ -1,14 +1,8 @@
-//
-// server.cpp
-// ~~~~~~~~~~
-//
-// Copyright (c) 2003-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
+// David Inglis & Eli Sorey
+// server.cpp: a very simple http server
+// Referenced the Boost TCP server tutorial: 
+// http://www.boost.org/doc/libs/1_57_0/doc/html/boost_asio/tutorial/tutdaytime2.html
 
-#include <ctime>
 #include <iostream>
 #include <string>
 #include <boost/asio.hpp>
@@ -16,54 +10,45 @@
 
 using boost::asio::ip::tcp;
 
-std::string make_hello_world_string()
-{
-  std::stringstream ssOut;
-  std::string sHTML = "<html><body>Hello, world!</body></html>";
-  ssOut << "HTTP/1.0 200 OK" << std::endl;
-  ssOut << "content-type: text/html" << std::endl;
-  ssOut << "content-length: " << sHTML.length() << std::endl;
-  ssOut << std::endl;
-  ssOut << sHTML;
-  return ssOut.str();
+// Serves a simple hello world HTML page
+std::string serve_page() {
+    std::stringstream ss;
+    std::string body = "<html><body>Hello, world!</body></html>";
+    ss << "HTTP/1.0 200 OK\n";
+    ss << "content-type: text/html\n";
+    ss << "content-length: " << body.length() << "\n\n";
+    ss << body;
+    return ss.str();
 }
 
 int parse_port(const char *config_string) {
-  NginxConfigParser parser;
-  NginxConfig config;
-  std::stringstream config_stream(config_string);
-  parser.Parse(config_string, &config);
-  return std::stoi(config.statements_.at(0)->tokens_.at(0));
+    NginxConfigParser parser;
+    NginxConfig config;
+    std::stringstream config_stream(config_string);
+    parser.Parse(config_string, &config);
+    return std::stoi(config.statements_.at(0)->tokens_.at(0));
 }
 
 int main(int argc, char* argv[])
 {
-  try
-  {
-    boost::asio::io_service io_service;
-    std::cout << argv[1] << std::endl;
-    std::string config_file = std::string(argv[1]);
-    int port = parse_port(argv[1]);
-    std::cout << port << std::endl;
-    tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), port));
-
-    for (;;)
+    try
     {
-      tcp::socket socket(io_service);
-      acceptor.accept(socket);
-      std::cout << "one \n";
+        boost::asio::io_service io_service;
+        std::string config_file = std::string(argv[1]);
+        int port = parse_port(argv[1]);
+        tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), port));
 
-      std::string message = make_hello_world_string();
-
-      boost::system::error_code ignored_error;
-      boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
-      std::cout << "two \n";
+        // loop on accepting input and serving the page in response
+        while(true) {
+            tcp::socket socket(io_service);
+            acceptor.accept(socket);
+            boost::asio::write(socket, boost::asio::buffer(serve_page()));
+        }
     }
-  }
-  catch (std::exception& e)
-  {
-    std::cerr << e.what() << std::endl;
-  }
+    catch (std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
 
-  return 0;
+    return 0;
 }
