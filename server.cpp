@@ -31,6 +31,10 @@ int parse_port(const char *config_string) {
 
 int main(int argc, char* argv[])
 {
+    if (argc != 2) {
+        std::cerr << "usage: ./server <server_config_file>"  << std::endl;
+        return(1);
+    }
     try
     {
         boost::asio::io_service io_service;
