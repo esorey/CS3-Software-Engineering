@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
         }
         tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), port));
 
-        // loop on accepting input and serving the page in response
+        // loop on accepting input and serve the page in response
         while(true) {
             tcp::socket socket(io_service);
             acceptor.accept(socket);
