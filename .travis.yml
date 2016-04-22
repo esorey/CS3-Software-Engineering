@@ -1,5 +1,5 @@
 language: cpp
-script: make server_test
+script: make test
 addons:
     apt:
         packages:

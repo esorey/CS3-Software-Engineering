@@ -36,7 +36,12 @@ server_test.o: server_test.cc server.h
 
 server_test: server_support.o config_parser.o server_test.o libgtest.a gtest_main.o
 	clang++ -std=c++11 -o $@ $^ $(I_BOOST) $(L_BOOST) -lboost_system -lpthread
+
+test:
+	make server_test
+	make config_parser_test
 	./server_test
+	./config_parser_test
 
 clean:
 	rm *.o server config_parser_test server server_test
