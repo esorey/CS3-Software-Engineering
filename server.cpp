@@ -75,19 +75,23 @@ int main(int argc, char* argv[]) {
     // Parse command-line args
     int i;
     int echo = 0;
+    char *config_file;
 
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-e") == 0)  // Check for echo parameter
         {
             echo = 1;  
         }
+
+        else if (strncmp(argv[i], "-", 2) != 0) {
+            config_file = argv[i];
+        }
     }
 
     // Run the server
     try {
         boost::asio::io_service io_service;
-        std::string config_file = std::string(argv[1]);
-        int port = parse_port(argv[1]);
+        int port = parse_port(config_file);
         if (port == -1) {
             return 1;
         }
