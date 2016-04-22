@@ -46,20 +46,15 @@ void handle_request(tcp::socket *sock, bool echo) {
             char data[max_length];
             boost::system::error_code error;
             size_t length;
-            for (;;) {
-                char data[max_length];
-                boost::system::error_code error;
-                size_t length = sock->read_some(boost::asio::buffer(data), error);
+            length = sock->read_some(boost::asio::buffer(data), error);
 
-                if (error == boost::asio::error::eof)
-                  break; // Connection closed cleanly by peer.
-                else if (error)
-                  throw boost::system::system_error(error); // Some other error.
+            if (error == boost::asio::error::eof)
+              return; // Connection closed cleanly by peer.
+            else if (error)
+              throw boost::system::system_error(error); // Some other error.
 
-                // Echo the request back to the client
-                boost::asio::write(*sock, boost::asio::buffer(data, length));
-                break;
-            }
+            // Echo the request back to the client
+            boost::asio::write(*sock, boost::asio::buffer(data, length));
         }
 
         else {  // Serve "Hello, world!"
