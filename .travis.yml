@@ -1,0 +1,6 @@
+language: cpp
+script: make server
+addons:
+    apt:
+        packages:
+        - libboost-all-dev
