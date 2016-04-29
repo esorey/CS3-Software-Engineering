@@ -5,6 +5,7 @@
 #include "server_support.h"
 #include "request.h"
 #include "echo_request_handler.h"
+#include "file_request_handler.h"
 
 using boost::asio::ip::tcp;
 
@@ -60,7 +61,8 @@ void handle_request(tcp::socket *sock, bool echo) {
         }
 
         else {  // Serve "Hello, world!"
-            boost::asio::write(*sock, boost::asio::buffer(serve_hello_page()));
+            file_request_handler f(r, sock, "str");
+            f.handle();
         }
     }
     catch (std::exception& e) {
