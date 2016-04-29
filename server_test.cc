@@ -13,7 +13,7 @@ TEST(ServerTest, PortParsing) {
 
 TEST(ServerTest, BasePathParsing) {
 	std::string base_path = parse_base_path("server_config_full");
-	EXPECT_EQ(base_path, "path");
+	EXPECT_EQ(base_path, "files");
 }
 
 TEST(ServerTest, RequestPrefixParsing) {
