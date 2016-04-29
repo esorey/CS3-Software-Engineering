@@ -35,6 +35,20 @@ int parse_port(const char *config_string) {
     return std::stoi(config.statements_.at(0)->tokens_.at(1));
 }
 
+// Parses a base path for static files from a config file
+std::string parse_base_path(const char *config_string) {
+    NginxConfigParser parser;
+    NginxConfig config;
+    std::stringstream config_stream(config_string);
+    parser.Parse(config_string, &config);
+
+    if (config.statements_.at(4)->tokens_.at(0).compare("base_path") != 0) {
+        std::cerr << "invalid config file format" << std::endl;
+        exit(1);
+    }
+    return config.statements_.at(4)->tokens_.at(1); 
+}
+
 // Handles incoming server requests according to provided parameters
 // If echo is true, the server will echo the HTTP request it receives.
 // Otherwise, it will serve "Hello, world!".
