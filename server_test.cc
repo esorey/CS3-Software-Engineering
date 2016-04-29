@@ -3,6 +3,8 @@
 #include <boost/asio.hpp>
 #include "gtest/gtest.h"
 #include "server_support.h"
+#include "request_handler.h"
+#include "reply.h"
 
 TEST(ServerTest, PortParsing) {
     int port = parse_port("server_config");
@@ -20,4 +22,18 @@ TEST(ServerTest, RequestPrefixParsing) {
 
 	prefix = parse_request_prefix("GET /static/test.html HTTP/1.1");
 	EXPECT_EQ(prefix, "/static");
+
+	prefix = parse_request_prefix("GET /simple HTTP/1.1");
+	EXPECT_EQ(prefix, "/simple");
+}
+
+TEST(ServerTest, ReplyString) {
+	reply rep;
+	request req;
+	rep.status = "HTTP/1.0 200 OK";
+	rep.content_type = "content-type: text/plain";
+	rep.body = "this is the reply body";
+	request_handler *handler = new request_handler(req, NULL);
+	std::string rep_string = handler->build_reply_string(rep);
+	EXPECT_EQ(rep_string, "HTTP/1.0 200 OK\ncontent-type: text/plain\ncontent-length: 22\n\nthis is the reply body");
 }
