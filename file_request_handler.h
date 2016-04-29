@@ -7,10 +7,11 @@ using boost::asio::ip::tcp;
 
 class file_request_handler: public request_handler {
     public:
-        file_request_handler(request req, tcp::socket *s, std::string fp);
+        file_request_handler(request req, tcp::socket *s, std::string fp, std::string bp);
         void handle();
     protected:
         std::string filepath;
+        std::string basepath;
 };
 
 

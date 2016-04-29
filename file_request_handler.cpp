@@ -1,19 +1,22 @@
 #include "file_request_handler.h"
+#include "server_support.h"
 #include <iostream>
 #include <string>
 #include <fstream>
 
 file_request_handler::file_request_handler(request req, 
                                            tcp::socket *s,
-                                           std::string fp) : request_handler(req, s) {
+                                           std::string fp,
+                                           std::string bp) : request_handler(req, s) {
     filepath = fp;
+    basepath = bp;
 }
 
 void file_request_handler::handle() {
     reply r;
 
     //std::string full_path = parse_base_path() + filepath;
-    std::string full_path = "files" + filepath;
+    std::string full_path = basepath + filepath;
 
     std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
     if (!is) {
@@ -31,7 +34,7 @@ void file_request_handler::handle() {
         r.body.append(buf, is.gcount());
     }
     r.status = "HTTP/1.0 200 OK";
-    r.content_type = "content-type: image/png";
+    r.content_type = parse_content_type(filepath);
     serve_reply(r);
 
 }

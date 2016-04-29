@@ -12,6 +12,35 @@ using boost::asio::ip::tcp;
 
 const int max_length = 1024;
 
+
+std::string parse_content_type(std::string filepath) {
+    std::string::size_type dot_pos = filepath.find('.');
+    if (dot_pos == std::string::npos) {
+        printf("could not find dot in filetype string \n");
+        return NULL;
+    }
+
+    std::string ext = filepath.substr(dot_pos + 1);
+
+    std::string s = "content-type: ";
+    if (ext.compare("png") == 0) {
+        s += "image/png";
+    }
+    else if (ext.compare("jpg") == 0) {
+        s += "image/jpg";
+    }
+
+    else if (ext.compare("html") == 0) {
+        s += "text/html";
+    }
+
+    else {
+        return NULL;
+    }
+
+    return s;
+}
+
 // Serves a simple hello world HTML page
 std::string serve_hello_page() {
     std::stringstream ss;
@@ -30,11 +59,15 @@ int parse_port(const char *config_string) {
     std::stringstream config_stream(config_string);
     parser.Parse(config_string, &config);
 
-    if (config.statements_.at(0)->tokens_.at(0).compare("port") != 0) {
-        std::cerr << "first line of config file must be port number" << std::endl;
-        return -1;
+    // iterate through config file looking for port
+    for (int i = 0; i < config.statements_.size(); i++) {
+        if (config.statements_.at(i)->tokens_.at(0).compare("port") == 0) {
+            return std::stoi(config.statements_.at(i)->tokens_.at(1));
+        }
     }
-    return std::stoi(config.statements_.at(0)->tokens_.at(1));
+
+    std::cerr << "Could not find port in config file" << std::endl;
+    return -1; 
 }
 
 // Parses a base path for static files from a config file
@@ -96,7 +129,7 @@ std::string parse_filepath(const char *data) {
 // Handles incoming server requests according to provided parameters
 // If echo is true, the server will echo the HTTP request it receives.
 // Otherwise, it will serve "Hello, world!".
-void handle_request(tcp::socket *sock, bool echo) {
+void handle_request(tcp::socket *sock, const char *config) {
     try {
         request r;
         boost::system::error_code error;
@@ -120,7 +153,7 @@ void handle_request(tcp::socket *sock, bool echo) {
             e.handle();
         }
         else if (prefix.compare("/static") == 0) {
-            file_request_handler f(r, sock, parse_filepath(r.data));
+            file_request_handler f(r, sock, parse_filepath(r.data), parse_base_path(config));
             f.handle();
         }
         else {

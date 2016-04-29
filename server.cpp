@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
         while(true) {
             tcp::socket sock(io_service);
             acceptor.accept(sock);
-            handle_request(&sock, echo);
+            handle_request(&sock, config_file);
 
         }
     }
