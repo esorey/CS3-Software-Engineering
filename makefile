@@ -22,13 +22,16 @@ config_parser_main.o: config_parser_main.cc config_parser.h
 config_parser_test: config_parser.o config_parser_test.o libgtest.a gtest_main.o
 	clang++ -pthread $^ -o config_parser_test
 
-server_support.o: server_support.cpp config_parser.o
+file_request_handler.o: file_request_handler.cpp
+	clang++ -std=c++11 -c -o $@ $< $(I_BOOST)
+
+server_support.o: server_support.cpp config_parser.o file_request_handler.o
 	clang++ -std=c++11 -c -o $@ $< $(I_BOOST)
 
 server.o: server.cpp server_support.o config_parser.o
 	clang++ -std=c++11 -c -o  $@ $< $(I_BOOST)
 
-server: server.o config_parser.o server_support.o
+server: file_request_handler.o server.o config_parser.o server_support.o
 	clang++ -std=c++11 -o $@ $^ $(I_BOOST) $(L_BOOST) -lboost_system -lpthread
 
 server_test.o: server_test.cc server.h
