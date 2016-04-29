@@ -3,6 +3,8 @@
 #include <boost/asio.hpp>
 #include "config_parser.h"
 #include "server_support.h"
+#include "request.h"
+#include "echo_request_handler.h"
 
 using boost::asio::ip::tcp;
 
@@ -38,19 +40,23 @@ int parse_port(const char *config_string) {
 // Otherwise, it will serve "Hello, world!".
 void handle_request(tcp::socket *sock, bool echo) {
     try {
+        request r;
+        boost::system::error_code error;
+        r.length = sock->read_some(boost::asio::buffer(r.data), error);
+
+        if (error == boost::asio::error::eof) {
+            printf("EOF error \n");
+            return;
+        }
+
+        else if (error) {
+            printf("Some other error \n");
+            throw boost::system::system_error(error);
+        }
+        
         if (echo) {  // Echo the HTTP request
-            char data[max_length];
-            boost::system::error_code error;
-            size_t length;
-            length = sock->read_some(boost::asio::buffer(data), error);
-
-            if (error == boost::asio::error::eof)
-              return; // Connection closed cleanly by peer.
-            else if (error)
-              throw boost::system::system_error(error); // Some other error.
-
-            // Echo the request back to the client
-            boost::asio::write(*sock, boost::asio::buffer(data, length));
+            echo_request_handler e(r, sock);
+            e.handle();
         }
 
         else {  // Serve "Hello, world!"
