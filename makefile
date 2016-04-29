@@ -37,7 +37,7 @@ server: file_request_handler.o server.o config_parser.o server_support.o
 server_test.o: server_test.cc server.h
 	clang++ -std=c++11 $(GTEST_I) -c -pthread $^ $^ $(I_BOOST)
 
-server_test: server_support.o config_parser.o server_test.o libgtest.a gtest_main.o
+server_test: file_request_handler.o server_support.o config_parser.o server_test.o libgtest.a gtest_main.o
 	clang++ -std=c++11 -o $@ $^ $(I_BOOST) $(L_BOOST) -lboost_system -lpthread
 
 test:
