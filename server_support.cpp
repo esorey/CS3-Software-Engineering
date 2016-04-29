@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include <boost/asio.hpp>
 #include "config_parser.h"
 #include "server_support.h"
@@ -49,6 +50,26 @@ std::string parse_base_path(const char *config_string) {
     return config.statements_.at(4)->tokens_.at(1); 
 }
 
+// Parses a prefix from an HTTP request.
+std::string parse_request_prefix(const char *data) {
+    std::string request(data);
+    // Find the first slash
+    std::string::size_type slash_pos1 = request.find('/');
+    if (slash_pos1 == std::string::npos) {
+        printf("Improper HTTP request format");
+        exit(1);
+    }
+
+    // Find the next slash and next space
+    std::string::size_type slash_pos2 = request.find('/', slash_pos1 + 1);
+    std::string::size_type space_pos = request.find(' ', slash_pos1);
+
+    // We want the substring from the first slash to the next slash or space,
+    // whichever comes first.
+    return request.substr(slash_pos1, std::min(space_pos, slash_pos2) - slash_pos1);
+
+}
+
 // Handles incoming server requests according to provided parameters
 // If echo is true, the server will echo the HTTP request it receives.
 // Otherwise, it will serve "Hello, world!".
@@ -68,14 +89,30 @@ void handle_request(tcp::socket *sock, bool echo) {
             throw boost::system::system_error(error);
         }
         
-        if (echo) {  // Echo the HTTP request
+        // Grab the request prefix
+        std::string prefix = parse_request_prefix(r.data);
+
+        switch(prefix) {
+            case "/echo": // Echo the HTTP request
+                echo_request_handler e(r, sock);
+                e.handle();
+
+            case "/static": // Retrieve static pages
+                // TODO: add static handler here
+
+
+            default: // Serve "Hello, world!"
+                boost::asio::write(*sock, boost::asio::buffer(serve_hello_page()));
+                
+        }
+        /*if (echo) {  // Echo the HTTP request
             echo_request_handler e(r, sock);
             e.handle();
         }
 
         else {  // Serve "Hello, world!"
             boost::asio::write(*sock, boost::asio::buffer(serve_hello_page()));
-        }
+        }*/
     }
     catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
