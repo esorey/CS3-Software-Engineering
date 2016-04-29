@@ -20,6 +20,11 @@ class request_handler {
             boost::asio::write(*sock, boost::asio::buffer(ss.str()));
         }
 
+        request_handler(request req, tcp::socket *s) {
+            sock = s;
+            r = req;
+        }
+
     protected:
         tcp::socket *sock;
         request r;

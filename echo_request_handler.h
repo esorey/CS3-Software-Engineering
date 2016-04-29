@@ -29,7 +29,7 @@ class echo_request_handler: public request_handler {
         echo_request_handler(request req, tcp::socket *s);
 };
 
-echo_request_handler::echo_request_handler(request req, tcp::socket *s) {
+echo_request_handler::echo_request_handler(request req, tcp::socket *s) : request_handler(req, s) {
     r = req;
     sock = s;
 }

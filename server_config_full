@@ -1,0 +1,5 @@
+port 8080;
+hello /simple;
+echo /echo;
+static /static;
+base_path path;
