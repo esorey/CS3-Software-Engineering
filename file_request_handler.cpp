@@ -5,9 +5,7 @@
 
 file_request_handler::file_request_handler(request req, 
                                            tcp::socket *s,
-                                           std::string fp) {
-    r = req;
-    sock = s;
+                                           std::string fp) : request_handler(req, s) {
     filepath = fp;
 }
 
@@ -15,7 +13,7 @@ void file_request_handler::handle() {
     reply r;
 
     //std::string full_path = parse_base_path() + filepath;
-    std::string full_path = "files/test.png";
+    std::string full_path = "files" + filepath;
 
     std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
     if (!is) {

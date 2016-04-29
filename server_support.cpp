@@ -57,7 +57,7 @@ std::string parse_request_prefix(const char *data) {
     // Find the first slash
     std::string::size_type slash_pos1 = request.find('/');
     if (slash_pos1 == std::string::npos) {
-        printf("Improper HTTP request format");
+        printf("Improper HTTP request format \n");
         exit(1);
     }
 
@@ -68,6 +68,29 @@ std::string parse_request_prefix(const char *data) {
     // We want the substring from the first slash to the next slash or space,
     // whichever comes first.
     return request.substr(slash_pos1, std::min(space_pos, slash_pos2) - slash_pos1);
+}
+
+std::string parse_filepath(const char *data) {
+    std::string request(data);
+
+    std::string::size_type slash_pos1 = request.find('/');
+    if (slash_pos1 == std::string::npos) {
+        printf("Improper request format \n");
+        return NULL;
+    }
+
+    std::string::size_type slash_pos2 = request.find('/', slash_pos1 + 1);
+    if (slash_pos2 == std::string::npos) {
+        printf("Improper request format \n");
+        return NULL;
+    }
+
+    std::string::size_type space_pos = request.find(' ', slash_pos2);
+    if (slash_pos2 == std::string::npos) {
+        printf("Improper request format \n");
+        return NULL;
+    }
+    return request.substr(slash_pos2, space_pos - slash_pos2);
 }
 
 // Handles incoming server requests according to provided parameters
@@ -97,7 +120,7 @@ void handle_request(tcp::socket *sock, bool echo) {
             e.handle();
         }
         else if (prefix.compare("/static") == 0) {
-            file_request_handler f(r, sock, "str");
+            file_request_handler f(r, sock, parse_filepath(r.data));
             f.handle();
         }
         else {
