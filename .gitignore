@@ -1,2 +1,6 @@
 test
 test.dSYM/
+commands.txt
+*.a
+*.gch
+.DS_Store

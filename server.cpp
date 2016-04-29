@@ -14,24 +14,14 @@ using boost::asio::ip::tcp;
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "usage: ./server [-e] <server_config_file> "  << std::endl;
+        std::cerr << "usage: ./server <server_config_file> "  << std::endl;
         exit(1);
     }
 
     // Parse command-line args
     int i;
     int echo = 0;
-    char *config_file;
-
-    for (i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-e") == 0)  // Check for echo parameter
-        {
-            echo = 1;  
-        }
-        else if (strncmp(argv[i], "-", 2) != 0) {
-            config_file = argv[i];
-        }
-    }
+    char *config_file = argv[1];
 
     // Run the server
     try {

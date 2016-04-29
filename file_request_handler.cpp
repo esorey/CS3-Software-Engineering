@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 
+// Subclass constructor
 file_request_handler::file_request_handler(request req, 
                                            tcp::socket *s,
                                            std::string fp,
@@ -12,6 +13,7 @@ file_request_handler::file_request_handler(request req,
     basepath = bp;
 }
 
+// Request handler; finds the requested file and serves it to the requester
 void file_request_handler::handle() {
     reply r;
 
@@ -19,16 +21,15 @@ void file_request_handler::handle() {
     std::string full_path = basepath + filepath;
 
     std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
-    if (!is) {
+    if (!is) { // Make sure the file exists; 404 if it doesn't
         r.body = "<html><body>404 Not Found</body></html>";
         r.status = "HTTP/1.0 404 Not Found";
         r.content_type = "content-type: text/html";
         serve_reply(r);
         return;
     }
-    else {
-
-    }
+    
+    // Read the file contents into a buffer and append it to the reply body
     char buf[1024];
     while (is.read(buf, sizeof(buf)).gcount() > 0) {
         r.body.append(buf, is.gcount());

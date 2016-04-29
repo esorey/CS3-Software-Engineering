@@ -8,6 +8,8 @@ using boost::asio::ip::tcp;
 
 class echo_request_handler: public request_handler {
     public:
+
+        // handles a request by echoing it back in reply
         void handle() {
             reply rep;
             for (int i = 0; i < r.length; i++) {
@@ -16,14 +18,6 @@ class echo_request_handler: public request_handler {
             rep.status = "HTTP/1.0 200 OK";
             rep.content_type = "content-type: text/plain";
             serve_reply(rep);
-        }
-
-        void set_request(request req) {
-            r = req;
-        }
-
-        void set_socket(tcp::socket *s) {
-            sock = s;
         }
 
         echo_request_handler(request req, tcp::socket *s);

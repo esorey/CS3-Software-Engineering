@@ -6,6 +6,8 @@
 #include "request_handler.h"
 #include "reply.h"
 
+// TODO: end-to-end integration test of the server
+
 TEST(ServerTest, PortParsing) {
     int port = parse_port("server_config");
     EXPECT_EQ(port, 8080);
