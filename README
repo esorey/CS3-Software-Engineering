@@ -1,0 +1,13 @@
+This code implements a web server following the API agreed upon in CS3 at Caltech.
+
+API Details:
+
+- Handlers are all created when the web server starts up, and they stay around for the life of the server.
+- All handlers are subclasses of RequestHandler. Details in request-handler.h
+- Config passing will be done by map from handler name to path. Example config file in new_config.
+
+Adding New Handlers:
+
+- Create the new handler class as a subclass of RequestHandler
+- Add a case for the new handler type in parse_config, found in server_support.cpp
+- Add a build target for the new handler in the makefile
