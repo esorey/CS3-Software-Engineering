@@ -3,4 +3,6 @@ test.dSYM/
 commands.txt
 *.a
 *.gch
+*.o
+server
 .DS_Store

@@ -1,0 +1,12 @@
+port 8080;
+handler echo {
+  path /echo;
+}
+handler static {
+  path /static;
+  directory /foo;
+}
+handler static {
+  path /more_static;
+  directory /foo;
+}

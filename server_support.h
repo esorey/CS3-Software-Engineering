@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <string>
+#include "request-handler.h"
 
 using boost::asio::ip::tcp;
 
@@ -20,6 +21,6 @@ std::string parse_request_prefix(const char *data);
 
 std::string parse_content_type(std::string filepath);
 
-void handle_request(tcp::socket *sock, const char *config);
+void handle_request(tcp::socket *sock, const std::map<std::string, RequestHandler*>& handler_map);
 
 #endif

@@ -4,9 +4,8 @@
 #include <boost/asio.hpp>
 #include "config_parser.h"
 #include "server_support.h"
-#include "request.h"
-#include "echo_request_handler.h"
-#include "file_request_handler.h"
+#include "request-handler.h"
+
 
 using boost::asio::ip::tcp;
 
@@ -93,8 +92,8 @@ std::string parse_base_path(const char *config_string) {
 }
 
 // Parses a prefix from an HTTP request.
-std::string parse_request_prefix(const char *data) {
-    std::string request(data);
+std::string parse_request_prefix(std::string request) {
+
     // Find the first slash
     std::string::size_type slash_pos1 = request.find('/');
     if (slash_pos1 == std::string::npos) {
@@ -136,6 +135,15 @@ std::string parse_filepath(const char *data) {
     return request.substr(slash_pos2, space_pos - slash_pos2);
 }
 
+std::string build_reply_string(HttpResponse* resp) {
+    std::stringstream ss;
+    ss << resp->http_version_ << " " << resp->status_code_ << " " << resp->reason_phrase_ << std::endl;
+    ss << resp->content_type_ << std::endl;
+    ss << "content-length: " << resp->body_.length() << std::endl << std::endl;
+    ss << resp->body_;
+    return ss.str();
+}
+
 // TODO: This should really be a class method for some sort of request
 // parser object. That way we can store the config parameters instead
 // of having to recompute them for every request
@@ -143,12 +151,17 @@ std::string parse_filepath(const char *data) {
 // Handles incoming server requests according to provided parameters
 // If echo is true, the server will echo the HTTP request it receives.
 // Otherwise, it will serve "Hello, world!".
-void handle_request(tcp::socket *sock, const char *config) {
+void handle_request(tcp::socket *sock, const std::map<std::string, RequestHandler*>& handler_map) {
     try {
         // build request by reading in request data in from tcp socket
-        request r;
+        char data[1024];
+        HttpRequest req;
         boost::system::error_code error;
-        r.length = sock->read_some(boost::asio::buffer(r.data), error);
+        int length = sock->read_some(boost::asio::buffer(data), error);
+
+        for (int i = 0; i < length; i++) {
+            req.raw_request_.append(1, data[i]);
+        }
 
         // handle errors when reading in the request
         if (error == boost::asio::error::eof) {
@@ -161,30 +174,24 @@ void handle_request(tcp::socket *sock, const char *config) {
         }
         
         // Grab the request prefix
-        std::string prefix = parse_request_prefix(r.data);
-
-        // TODO: store these results in some request parser object
-        // Instead of having to compute them for every request
-        std::vector<std::string> echo_prefixes = parse_request_paths(config, ECHO_LOCATION);
-        std::vector<std::string> file_prefixes = parse_request_paths(config, FILE_LOCATION);
-
-        // Match the request prefix to the appropriate handler
-        if (std::find(echo_prefixes.begin(), echo_prefixes.end(), prefix) != echo_prefixes.end()) {
-            echo_request_handler e(r, sock);
-            e.handle();
+        std::string prefix = parse_request_prefix(req.raw_request_);
+        HttpResponse resp;
+        std::cout << prefix << std::endl;
+        if (handler_map.find(prefix) != handler_map.end()) {
+            RequestHandler* h = handler_map.find(prefix)->second;
+            h->HandleRequest(req, &resp);
         }
-        else if (std::find(file_prefixes.begin(), file_prefixes.end(), prefix) != file_prefixes.end()) {
-            file_request_handler f(r, sock, parse_filepath(r.data), parse_base_path(config));
-            f.handle();
-        }
+
         else { // Couldn't find handler; bad request
-            request_handler h(r, sock);
-            reply r;
-            r.body = "<html><body>400 Bad Request</body></html>";
-            r.status = "HTTP/1.0 400 Bad Request";
-            r.content_type = "content-type text/html";
-            h.serve_reply(r);   
+            resp.http_version_ = "HTTP/1.0";
+            resp.status_code_ = "400";
+            resp.reason_phrase_ = "Bad Request";
+            resp.content_type_ = "content-type text/html";
+            resp.body_ = "<html><body>400 Bad Request</body></html>";  
         }
+
+        std::string reply = build_reply_string(&resp);
+        boost::asio::write(*sock, boost::asio::buffer(reply));
     }
     catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
