@@ -1,5 +1,5 @@
-#ifndef ECHO_REQUEST_HANDLER_H
-#define ECHO_REQUEST_HANDLER_H
+#ifndef ECHO_REQUEST_HANDLERR_H
+#define ECHO_REQUEST_HANDLERR_H
 
 #include "request-handler.h"
 
@@ -18,6 +18,10 @@ public:
         response->body_ = request.raw_request_;
 
         return true;
+    }
+
+    std::string Basepath(void) {
+        return "null";
     }
 };
 

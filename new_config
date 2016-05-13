@@ -3,10 +3,14 @@ handler echo {
   path /echo;
 }
 handler static {
-  path /static;
+  path /more_static;
   directory /foo;
 }
 handler static {
-  path /more_static;
-  directory /foo;
+  path /static;
+  directory /files;
+}
+handler static {
+    path /static2;
+    directory /dir;
 }

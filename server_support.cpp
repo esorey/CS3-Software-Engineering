@@ -5,11 +5,10 @@
 #include "config_parser.h"
 #include "server_support.h"
 #include "request-handler.h"
-
+#include "echo-request-handler.h"
+#include "file-request-handler.h"
 
 using boost::asio::ip::tcp;
-
-const int max_length = 1024;
 
 // Parses the content type of a request string
 std::string parse_content_type(std::string filepath) {
@@ -44,53 +43,6 @@ std::string parse_content_type(std::string filepath) {
     return s;
 }
 
-// Parses the valid request paths for each request handler from the config file
-std::vector<std::string> parse_request_paths(const char *config_string, int line) {
-    std::vector<std::string> ret;
-    NginxConfigParser parser;
-    NginxConfig config;
-    std::stringstream config_stream(config_string);
-    parser.Parse(config_string, &config);
-
-    // TODO error-check the first token to make sure it is valid
-
-    // Build a vector of valid request prefix string
-    for (int i = 1; i < config.statements_.at(line)->tokens_.size(); i++) {
-        ret.push_back(config.statements_.at(line)->tokens_.at(i));
-    }
-    return ret;
-}
-
-// Parses the port number from a config file
-int parse_port(const char *config_string) {
-    NginxConfigParser parser;
-    NginxConfig config;
-    std::stringstream config_stream(config_string);
-    parser.Parse(config_string, &config);
-
-    if (config.statements_.at(PORT_LOCATION)->tokens_.at(0).compare("port") == 0) {
-        return std::stoi(config.statements_.at(PORT_LOCATION)->tokens_.at(1));
-    }
-    else {
-        std::cerr << "Could not find port in config file" << std::endl;
-        return -1; 
-    }
-}
-
-// Parses the base file directory path from the config file
-std::string parse_base_path(const char *config_string) {
-    NginxConfigParser parser;
-    NginxConfig config;
-    std::stringstream config_stream(config_string);
-    parser.Parse(config_string, &config);
-
-    if (config.statements_.at(BASEPATH_LOCATION)->tokens_.at(0).compare("base_path") != 0) {
-        std::cerr << "invalid config file format" << std::endl;
-        return NULL;
-    }
-    return config.statements_.at(BASEPATH_LOCATION)->tokens_.at(1); 
-}
-
 // Parses a prefix from an HTTP request.
 std::string parse_request_prefix(std::string request) {
 
@@ -111,8 +63,7 @@ std::string parse_request_prefix(std::string request) {
 }
 
 // Parses the filepath from a request with a file prefix
-std::string parse_filepath(const char *data) {
-    std::string request(data);
+std::string parse_filepath(std::string request) {
 
     // Finds the substring between the first slash and the next space
     std::string::size_type slash_pos1 = request.find('/');
@@ -135,6 +86,7 @@ std::string parse_filepath(const char *data) {
     return request.substr(slash_pos2, space_pos - slash_pos2);
 }
 
+// Builds a reply from a response to serve out the tcp socket
 std::string build_reply_string(HttpResponse* resp) {
     std::stringstream ss;
     ss << resp->http_version_ << " " << resp->status_code_ << " " << resp->reason_phrase_ << std::endl;
@@ -144,14 +96,10 @@ std::string build_reply_string(HttpResponse* resp) {
     return ss.str();
 }
 
-// TODO: This should really be a class method for some sort of request
-// parser object. That way we can store the config parameters instead
-// of having to recompute them for every request
-
 // Handles incoming server requests according to provided parameters
 // If echo is true, the server will echo the HTTP request it receives.
 // Otherwise, it will serve "Hello, world!".
-void handle_request(tcp::socket *sock, const std::map<std::string, RequestHandler*>& handler_map) {
+void handle_request(tcp::socket *sock, const std::map<std::string, std::shared_ptr<RequestHandler>>& handler_map) {
     try {
         // build request by reading in request data in from tcp socket
         char data[1024];
@@ -173,12 +121,11 @@ void handle_request(tcp::socket *sock, const std::map<std::string, RequestHandle
             throw boost::system::system_error(error);
         }
         
-        // Grab the request prefix
+        // Find the handler that corresponds to the request prefix
         std::string prefix = parse_request_prefix(req.raw_request_);
         HttpResponse resp;
-        std::cout << prefix << std::endl;
         if (handler_map.find(prefix) != handler_map.end()) {
-            RequestHandler* h = handler_map.find(prefix)->second;
+            std::shared_ptr<RequestHandler> h = handler_map.find(prefix)->second;
             h->HandleRequest(req, &resp);
         }
 
@@ -197,3 +144,59 @@ void handle_request(tcp::socket *sock, const std::map<std::string, RequestHandle
         std::cerr << e.what() << std::endl;
     }
 }
+
+// Parses the config file into a map of request handlers
+// Each request handler is initialized with the config info for that handler
+void parse_config(int* port, std::map<std::string, std::shared_ptr<RequestHandler>>* handlers, const char* config_file) {
+    NginxConfigParser parser;
+    NginxConfig config;
+    parser.Parse(config_file, &config);
+
+    // iterate through each line of the config file
+    for (int i = 0; i < config.statements_.size(); i++) {
+        std::string type = config.statements_.at(i)->tokens_.at(0);
+
+        // parses the port, making sure there is only one port statement in the file
+        if (type.compare("port") == 0) {
+            if (*port == -1) {
+                *port = std::stoi(config.statements_.at(0)->tokens_.at(1));
+            }
+            else {
+                std::cerr << "Duplicate port declaration!" << std::endl;
+                exit(1);
+            }
+        }
+
+        else if (type.compare("handler") == 0) {
+            std::string handler_type = config.statements_.at(i)->tokens_.at(1);
+            std::map<std::string, std::string> config_map;
+
+            // iterate through the config statements and add them to the map for that handler
+            for (int j = 0; j < config.statements_.at(i)->child_block_->statements_.size(); j++) {
+                config_map.insert(std::pair<std::string, std::string>(config.statements_.at(i)->child_block_->statements_.at(j)->tokens_.at(0),
+                                  config.statements_.at(i)->child_block_->statements_.at(j)->tokens_.at(1)));
+            }
+
+            // then create the appropriate handler based on the type string
+            if (handler_type.compare("static") == 0) {
+                std::shared_ptr<RequestHandler> f(new FileRequestHandler);
+                f->Init(config_map);
+                handlers->insert(std::pair<std::string, std::shared_ptr<RequestHandler>>(config_map["path"], f));
+            }
+
+            else if (handler_type.compare("echo") == 0) {
+                std::shared_ptr<RequestHandler> e(new EchoRequestHandler);
+                e->Init(config_map);
+                handlers->insert(std::pair<std::string, std::shared_ptr<RequestHandler>>(config_map["path"], e));
+            }
+        }
+
+        // right now we only support ports and handlers
+        else {
+            std::cerr << "Unsupported type: " << type << std::endl;
+            exit(1);
+        }
+    }
+}
+
+

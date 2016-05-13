@@ -55,5 +55,7 @@ class RequestHandler {
     //
     // The dispatch mechanism is implemented in the main server code.
     virtual bool HandleRequest(const HttpRequest& request, HttpResponse* response) = 0;
+
+    virtual std::string Basepath(void) = 0;
 };
 #endif
