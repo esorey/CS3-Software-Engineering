@@ -10,6 +10,7 @@
 #include <iostream>
 #include <string>
 #include "request-handler.h"
+#include <boost/asio.hpp>
 
 using boost::asio::ip::tcp;
 
