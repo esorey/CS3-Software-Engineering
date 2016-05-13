@@ -7,7 +7,6 @@
 #include <string>
 #include <boost/asio.hpp>
 #include "config_parser.h"
-#include "server.h"
 #include "server_support.h"
 
 using boost::asio::ip::tcp;
@@ -18,26 +17,22 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    // Parse command-line args
-    int i;
-    int echo = 0;
+    // Set up config details from input config file
     char *config_file = argv[1];
-
+    std::map<std::string, std::shared_ptr<RequestHandler>> handlers;
+    int port = -1;
+    parse_config(&port, &handlers, config_file);
+    
     // Run the server
     try {
         boost::asio::io_service io_service;
-        int port = parse_port(config_file);
-        if (port == -1) {
-            return 1;
-        }
         tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), port));
 
-        // loop on accepting input and serve the page in response
+        // loop on handling incoming requests
         while(true) {
             tcp::socket sock(io_service);
             acceptor.accept(sock);
-            handle_request(&sock, config_file);
-
+            handle_request(&sock, handlers);
         }
     }
     catch (std::exception& e) {
