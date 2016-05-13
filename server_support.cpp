@@ -7,6 +7,7 @@
 #include "handlers/request-handler.h"
 #include "handlers/echo-request-handler.h"
 #include "handlers/file-request-handler.h"
+#include "handlers/not-found-request-handler.h"
 
 using boost::asio::ip::tcp;
 
@@ -188,6 +189,12 @@ void parse_config(int* port, std::map<std::string, std::shared_ptr<RequestHandle
                 std::shared_ptr<RequestHandler> e(new EchoRequestHandler);
                 e->Init(config_map);
                 handlers->insert(std::pair<std::string, std::shared_ptr<RequestHandler>>(config_map["path"], e));
+            }
+
+            else if (handler_type.compare("notfound") == 0) {
+                std::shared_ptr<RequestHandler> nf(new NotFoundRequestHandler);
+                nf->Init(config_map);
+                handlers->insert(std::pair<std::string, std::shared_ptr<RequestHandler>>(config_map["path"], nf));
             }
         }
 

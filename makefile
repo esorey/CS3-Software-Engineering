@@ -28,13 +28,16 @@ echo-request-handler.o: handlers/echo-request-handler.cpp
 file-request-handler.o: handlers/file-request-handler.cpp
 	clang++ -std=c++11 -g -c -o $@ $< $(I_BOOST)
 
+not-found-request-handler.o: handlers/not-found-request-handler.cpp
+	clang++ -std=c++11 -g -c -o $@ $< $(I_BOOST)
+
 server_support.o: server_support.cpp config_parser.o
 	clang++ -std=c++11 -g -c -o $@ $< $(I_BOOST)
 
 server.o: server.cpp server_support.o config_parser.o
 	clang++ -std=c++11 -g -c -o  $@ $< $(I_BOOST)
 
-server: echo-request-handler.o file-request-handler.o server.o config_parser.o server_support.o
+server: echo-request-handler.o file-request-handler.o not-found-request-handler.o server.o config_parser.o server_support.o
 	clang++ -g -std=c++11 -o $@ $^ $(I_BOOST) $(L_BOOST) -lboost_system -lpthread
 
 server_test.o: server_test.cc server.h

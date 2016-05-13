@@ -14,3 +14,6 @@ handler static {
     path /static2;
     directory /dir;
 }
+handler notfound {
+	path /notfound;
+}
