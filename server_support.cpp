@@ -4,9 +4,9 @@
 #include <boost/asio.hpp>
 #include "config_parser.h"
 #include "server_support.h"
-#include "request-handler.h"
-#include "echo-request-handler.h"
-#include "file-request-handler.h"
+#include "handlers/request-handler.h"
+#include "handlers/echo-request-handler.h"
+#include "handlers/file-request-handler.h"
 
 using boost::asio::ip::tcp;
 

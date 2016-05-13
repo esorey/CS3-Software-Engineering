@@ -22,10 +22,10 @@ config_parser_main.o: config_parser_main.cc config_parser.h
 config_parser_test: config_parser.o config_parser_test.o libgtest.a gtest_main.o
 	clang++ -pthread $^ -o config_parser_test
 
-echo-request-handler.o: echo-request-handler.cpp
+echo-request-handler.o: handlers/echo-request-handler.cpp
 	clang++ -std=c++11 -g -c -o $@ $< $(I_BOOST)
 
-file-request-handler.o: file-request-handler.cpp
+file-request-handler.o: handlers/file-request-handler.cpp
 	clang++ -std=c++11 -g -c -o $@ $< $(I_BOOST)
 
 server_support.o: server_support.cpp config_parser.o

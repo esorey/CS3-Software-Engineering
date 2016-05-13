@@ -7,11 +7,7 @@
 #include <string>
 #include <boost/asio.hpp>
 #include "config_parser.h"
-#include "server.h"
 #include "server_support.h"
-#include "request-handler.h"
-#include "echo-request-handler.h"
-#include "file-request-handler.h"
 
 using boost::asio::ip::tcp;
 
