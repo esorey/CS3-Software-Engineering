@@ -40,10 +40,10 @@ server.o: server.cpp server_support.o config_parser.o
 server: echo-request-handler.o file-request-handler.o not-found-request-handler.o server.o config_parser.o server_support.o
 	clang++ -g -std=c++11 -o $@ $^ $(I_BOOST) $(L_BOOST) -lboost_system -lpthread
 
-server_test.o: server_test.cc server.h
+server_test.o: server_test.cc server.cpp
 	clang++ -std=c++11 $(GTEST_I) -c -pthread $^ $^ $(I_BOOST)
 
-server_test: file-request-handler.o server_support.o config_parser.o server_test.o libgtest.a gtest_main.o
+server_test: file-request-handler.o not-found-request-handler.o echo-request-handler.o server_support.o config_parser.o server_test.o libgtest.a gtest_main.o
 	clang++ -std=c++11 -o $@ $^ $(I_BOOST) $(L_BOOST) -lboost_system -lpthread
 
 test:
