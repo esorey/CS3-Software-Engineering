@@ -1,5 +1,10 @@
 This code implements a web server following the API agreed upon in CS3 at Caltech.
 
+Running:
+- Compile with 'make server'
+- Run with './server new_config' (or substitute your own config file)
+- Tests can be run with 'make test'
+
 API Details:
 
 - Handlers are all created when the web server starts up, and they stay around for the life of the server.
@@ -11,3 +16,4 @@ Adding New Handlers:
 - Create the new handler class as a subclass of RequestHandler
 - Add a case for the new handler type in parse_config, found in server_support.cpp
 - Add a build target for the new handler in the makefile
+- Add any necessary configuration details for the handler to the config file
