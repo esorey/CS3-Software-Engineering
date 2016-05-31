@@ -20,5 +20,5 @@ handler proxy {
   server_port 9001;
 }
 handler notfound {
-	path /notfound;
+  path /notfound;
 }
