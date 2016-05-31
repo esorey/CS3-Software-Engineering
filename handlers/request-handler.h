@@ -2,6 +2,7 @@
 #define REQUEST_HANDLER_H
 
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -18,6 +19,16 @@ struct HttpRequest {
     Headers headers_;
 
     std::string body_;
+
+    std::string toString() {
+        std::stringstream ss;
+        ss << method_ << " " << uri_ << " " << version_ << "\r\n";
+        for (std::pair<std::string, std::string> head : headers_) {
+            ss << " " + head.first + ": " + head.second + "\r\n";
+        }
+        ss << "\r\n" << body_ << "\r\n";
+        return ss.str();
+    }
 };
 
 struct HttpResponse {
@@ -29,6 +40,18 @@ struct HttpResponse {
     Headers headers_;
 
     std::string body_;
+
+    std::string toString() {
+        std::stringstream ss;
+        ss << http_version_ << " " << status_code_ << " " << reason_phrase_ << "\r\n";
+        ss << content_type_ << "\r\n";
+        ss << "content-length: " << body_.length() << "\r\n";
+        for (std::pair<std::string, std::string> head : headers_) {
+            ss << " " + head.first + ": " + head.second + "\r\n";
+        }
+        ss << "\r\n" << body_ << "\r\n";
+        return ss.str();
+    }
 };
 
 // Created a server startup, and lasts for the lifetime of the server.

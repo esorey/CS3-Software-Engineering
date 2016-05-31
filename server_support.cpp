@@ -113,17 +113,11 @@ void parse_request(HttpRequest &request) {
 
         request.headers_.push_back(std::pair<std::string, std::string>(first, second));
     }
+
+    // body is found after an empty line after the headers
+    request.body_ = r.substr(end + 4);
 }
 
-// Builds a reply from a response to serve out the tcp socket
-std::string build_reply_string(HttpResponse* resp) {
-    std::stringstream ss;
-    ss << resp->http_version_ << " " << resp->status_code_ << " " << resp->reason_phrase_ << std::endl;
-    ss << resp->content_type_ << std::endl;
-    ss << "content-length: " << resp->body_.length() << std::endl << std::endl;
-    ss << resp->body_;
-    return ss.str();
-}
 
 // Handles incoming server requests according to provided parameters
 // If echo is true, the server will echo the HTTP request it receives.
@@ -168,7 +162,7 @@ void handle_request(tcp::socket *sock, const std::map<std::string, std::shared_p
             resp.body_ = "<html><body>400 Bad Request</body></html>";  
         }
 
-        std::string reply = build_reply_string(&resp);
+        std::string reply = resp.toString();
         boost::asio::write(*sock, boost::asio::buffer(reply));
     }
     catch (std::exception& e) {

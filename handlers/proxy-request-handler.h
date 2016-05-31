@@ -10,6 +10,8 @@ class ProxyRequestHandler: public RequestHandler {
 
         bool HandleRequest(const HttpRequest& request, HttpResponse* response);
 
+        void parseResponse(HttpResponse *response, std::string res);
+
     protected:
         std::string server_host;
         int server_port;
