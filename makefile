@@ -37,6 +37,9 @@ echo-request-handler.o: handlers/echo-request-handler.cpp
 file-request-handler.o: handlers/file-request-handler.cpp
 	$(CC) -std=c++11 -g -c -o $@ $< $(I_BOOST)
 
+proxy-request-handler.o: handlers/proxy-request-handler.cpp
+	$(CC) -std=c++11 -g -c -o $@ $< $(I_BOOST)
+
 not-found-request-handler.o: handlers/not-found-request-handler.cpp
 	$(CC) -std=c++11 -g -c -o $@ $< $(I_BOOST)
 
@@ -46,13 +49,13 @@ server_support.o: server_support.cpp config_parser.o
 server.o: server.cpp server_support.o config_parser.o
 	$(CC) -std=c++11 -g -c -o  $@ $< $(I_BOOST)
 
-server: echo-request-handler.o file-request-handler.o not-found-request-handler.o server.o config_parser.o server_support.o
+server: echo-request-handler.o file-request-handler.o proxy-request-handler.o not-found-request-handler.o server.o config_parser.o server_support.o
 	$(CC) -g -std=c++11 -o $@ $^ $(I_BOOST) $(L_BOOST) -lboost_system -lpthread
 
 server_test.o: server_test.cc server.cpp
 	$(CC) -std=c++11 $(GTEST_I) -c -pthread $^ $^ $(I_BOOST)
 
-server_test: file-request-handler.o not-found-request-handler.o echo-request-handler.o server_support.o config_parser.o server_test.o libgtest.a gtest_main.o
+server_test: file-request-handler.o proxy-request-handler.o not-found-request-handler.o echo-request-handler.o server_support.o config_parser.o server_test.o libgtest.a gtest_main.o
 	$(CC) -std=c++11 -o $@ $^ $(I_BOOST) $(L_BOOST) -lboost_system -lpthread
 
 test:
