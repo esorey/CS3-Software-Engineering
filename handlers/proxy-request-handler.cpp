@@ -40,6 +40,9 @@ bool ProxyRequestHandler::HandleRequest(const HttpRequest& request, HttpResponse
         else if (head.first == "Connection") {
             newRequest.headers_.at(i).second = "close";
         }
+        else if (head.first == "Accept-Encoding") {
+            newRequest.headers_.at(i).second = "*";
+        }
     }
     // 6 is length of the text "/proxy"
     newRequest.uri_ = newRequest.uri_.substr(6);
@@ -67,20 +70,19 @@ bool ProxyRequestHandler::HandleRequest(const HttpRequest& request, HttpResponse
     if (error) {
         throw boost::system::system_error(error);
     }
+
+    // From Boost docs
+    // <http://www.boost.org/doc/libs/1_38_0/doc/html/boost_asio/example/socks4/sync_client.cpp>
+    socket.send(boost::asio::buffer(newRequest.toString()));
+    std::string r;
+    do {
+        char buf[1024];
+        size_t bytes_transferred =
+            socket.receive(boost::asio::buffer(buf), {}, error);
+        if (!error) r.append(buf, bytes_transferred);
+    } while (!error);
     
-//    for(;;) {
-        // From Boost docs
-        // <http://www.boost.org/doc/libs/1_38_0/doc/html/boost_asio/example/socks4/sync_client.cpp>
-        socket.send(boost::asio::buffer(newRequest.toString()));
-        std::string r;
-        do {
-            char buf[1024];
-            size_t bytes_transferred =
-                socket.receive(boost::asio::buffer(buf), {}, error);
-            if (!error) r.append(buf, buf + bytes_transferred);
-        } while (!error);
-        
-        parseResponse(response, r);
+    parseResponse(response, r);
 }
 
 void ProxyRequestHandler::parseResponse(HttpResponse *response, std::string res) {
