@@ -7,6 +7,7 @@
 #include "handlers/request-handler.h"
 #include "handlers/echo-request-handler.h"
 #include "handlers/file-request-handler.h"
+#include "handlers/proxy-request-handler.h"
 #include "handlers/not-found-request-handler.h"
 
 using boost::asio::ip::tcp;
@@ -87,6 +88,33 @@ std::string parse_filepath(std::string request) {
     return request.substr(slash_pos2, space_pos - slash_pos2);
 }
 
+void parse_request(HttpRequest &request) {
+    std::string r = request.raw_request_;
+    
+    size_t start = r.find(" ");
+    request.method_ = r.substr(0, start);
+
+    size_t end = r.find(" ", start + 1);
+    request.uri_ = r.substr(start + 1, end - start - 1);
+
+    start = r.find("HTTP/");
+    end = r.find("\r\n", start);
+    request.version_ = r.substr(start, end - start);
+
+    // Parse headers
+    while (r.find(":", end) != std::string::npos) {
+        start = r.find("\r\n", start) + 2;
+        end = r.find(":", start);
+        std::string first = r.substr(start, end - start);
+
+        start = end + 2;
+        end = r.find("\r\n", start);
+        std::string second = r.substr(start, end - start);
+
+        request.headers_.push_back(std::pair<std::string, std::string>(first, second));
+    }
+}
+
 // Builds a reply from a response to serve out the tcp socket
 std::string build_reply_string(HttpResponse* resp) {
     std::stringstream ss;
@@ -121,6 +149,8 @@ void handle_request(tcp::socket *sock, const std::map<std::string, std::shared_p
             printf("Some other error \n");
             throw boost::system::system_error(error);
         }
+
+        parse_request(req);
         
         // Find the handler that corresponds to the request prefix
         std::string prefix = parse_request_prefix(req.raw_request_);
@@ -189,6 +219,12 @@ void parse_config(int* port, std::map<std::string, std::shared_ptr<RequestHandle
                 std::shared_ptr<RequestHandler> e(new EchoRequestHandler);
                 e->Init(config_map);
                 handlers->insert(std::pair<std::string, std::shared_ptr<RequestHandler>>(config_map["path"], e));
+            }
+
+            else if (handler_type.compare("proxy") == 0) {
+                std::shared_ptr<RequestHandler> p(new ProxyRequestHandler);
+                p->Init(config_map);
+                handlers->insert(std::pair<std::string, std::shared_ptr<RequestHandler>>(config_map["path"], p));
             }
 
             else if (handler_type.compare("notfound") == 0) {
