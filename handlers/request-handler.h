@@ -24,7 +24,7 @@ struct HttpRequest {
         std::stringstream ss;
         ss << method_ << " " << uri_ << " " << version_ << "\r\n";
         for (std::pair<std::string, std::string> head : headers_) {
-            ss << " " + head.first + ": " + head.second + "\r\n";
+            ss << head.first + ": " + head.second + "\r\n";
         }
         ss << "\r\n" << body_ << "\r\n";
         return ss.str();
@@ -47,7 +47,7 @@ struct HttpResponse {
         ss << content_type_ << "\r\n";
         ss << "content-length: " << body_.length() << "\r\n";
         for (std::pair<std::string, std::string> head : headers_) {
-            ss << " " + head.first + ": " + head.second + "\r\n";
+            ss << head.first + ": " + head.second + "\r\n";
         }
         ss << "\r\n" << body_ << "\r\n";
         return ss.str();
