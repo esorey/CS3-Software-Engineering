@@ -24,4 +24,6 @@ std::string parse_filepath(std::string request);
 
 void parse_config(int* port, std::map<std::string, std::shared_ptr<RequestHandler>>* handlers, const char* config_file);
 
+void parse_request(HttpRequest &request);
+
 #endif
