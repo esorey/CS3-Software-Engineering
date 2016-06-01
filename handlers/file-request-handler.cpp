@@ -22,7 +22,8 @@ bool FileRequestHandler::HandleRequest(const HttpRequest& request, HttpResponse*
         response->http_version_ = "HTTP/1.0";
         response->status_code_ = "404";
         response->reason_phrase_ = "Not Found";
-        response->content_type_ = "content-type: text/html";
+        response->content_type_ = "Content-Type: text/html";
+        response->headers_.push_back(std::make_pair("Content-Type", "text/html"));
         response->body_ = "<html><body>404 File Not Found</body></html>";
         return true;
     }

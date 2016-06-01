@@ -17,7 +17,7 @@ handler static {
 handler proxy {
   path /proxy;
   server_host www.caltech.edu;
-  server_port 9001;
+  server_port 80;
 }
 handler notfound {
   path /notfound;

@@ -44,8 +44,8 @@ struct HttpResponse {
     std::string toString() {
         std::stringstream ss;
         ss << http_version_ << " " << status_code_ << " " << reason_phrase_ << "\r\n";
-        ss << content_type_ << "\r\n";
-        ss << "content-length: " << body_.length() << "\r\n";
+//        ss << content_type_ << "\r\n";
+//        ss << "Content-Length: " << body_.length() << "\r\n";
         for (std::pair<std::string, std::string> head : headers_) {
             ss << head.first + ": " + head.second + "\r\n";
         }

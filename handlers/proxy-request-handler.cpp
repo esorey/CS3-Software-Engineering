@@ -30,12 +30,14 @@ bool ProxyRequestHandler::Init(const std::map<std::string, std::string>& config_
 bool ProxyRequestHandler::HandleRequest(const HttpRequest& request, HttpResponse* response) {
     // Parse incoming request -- Done in parseResponse
     HttpRequest newRequest = request;
+    stringstream ss;
+    ss << server_port;
     
     // Modify request by substituting in proxy host
     for (int i = 0; i < newRequest.headers_.size(); i++) {
         std::pair<std::string, std::string> head = newRequest.headers_.at(i);
         if (head.first == "Host") {
-            newRequest.headers_.at(i).second = server_host;
+            newRequest.headers_.at(i).second = server_host;// + ":" + ss.str();
         }
         else if (head.first == "Connection") {
             newRequest.headers_.at(i).second = "close";
@@ -55,7 +57,7 @@ bool ProxyRequestHandler::HandleRequest(const HttpRequest& request, HttpResponse
     // Read response from server
     boost::asio::io_service io_service;
     tcp::resolver resolver(io_service);
-    tcp::resolver::query query(server_host, "http");
+    tcp::resolver::query query(tcp::v4(), server_host, ss.str());
     tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
     tcp::resolver::iterator end;
     
@@ -83,6 +85,7 @@ bool ProxyRequestHandler::HandleRequest(const HttpRequest& request, HttpResponse
     } while (!error);
     
     parseResponse(response, r);
+    cout << "content type " << response->content_type_ << endl;
 }
 
 void ProxyRequestHandler::parseResponse(HttpResponse *response, std::string res) {
