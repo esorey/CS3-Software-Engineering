@@ -11,6 +11,13 @@ API Details:
 - All handlers are subclasses of RequestHandler. Details in request-handler.h
 - Config passing will be done by map from handler name to path. Example config file in new_config.
 
+Current Handlers:
+
+- Echo handler: respond with the HTTP request that the client issued
+- Not Found handler: respond with a 404 error message
+- Static handler: serve a file from the server's filesystem
+- Proxy handler: redirect the request to another server and serve its response
+
 Adding New Handlers:
 
 - Create the new handler class as a subclass of RequestHandler
